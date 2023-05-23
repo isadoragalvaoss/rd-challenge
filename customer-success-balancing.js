@@ -3,47 +3,63 @@
  * @param {array} customerSuccess
  * @param {array} customers
  * @param {array} customerSuccessAway
+ * @param {array} availableCustomerSuccess
  */
 
-function getAvailableCustomerIds(customerSuccess, customerSuccessAway) {
+function handleErrors(customerSuccess, customers, customerSuccessAway) {
+  if (!customerSuccess || !customers || !customerSuccessAway) {
+    throw new Error("Missing arguments for customerSuccessBalancing function.");
+  }
+
+  for (const cs of customerSuccess) {
+    if (!cs.id || !cs.score) {
+      throw new Error(
+        "Invalid CustomerSuccess object. Missing id or score property."
+      );
+    }
+  }
+
+  for (const customer of customers) {
+    if (!customer.id || !customer.score) {
+      throw new Error("Invalid Customer object. Missing id or score property.");
+    }
+  }
+}
+
+function filterAndSortCustomerSuccess(customerSuccess, customerSuccessAway) {
   return customerSuccess
-    .filter((cs) => !customerSuccessAway.includes(cs.id))
+    .filter(
+      (customerSuccess) => !customerSuccessAway.includes(customerSuccess.id)
+    )
     .map(({ id, score }) => ({ id, score, customers: [] }))
     .sort((a, b) => a.score - b.score);
 }
 
-function findHighestCSId(availableCS) {
-  const result = availableCS.reduce(
-    (acc, cs) => {
-      const customersLength = cs.customers.length;
-
-      if (customersLength > acc.higher) {
-        return { higher: customersLength, duplicated: 0, higherId: cs.id };
-      } else if (customersLength === acc.higher) {
-        return { ...acc, duplicated: acc.higher };
-      }
-
-      return acc;
-    },
-    { higher: 0, duplicated: 0, higherId: 0 }
-  );
-
-  return result.duplicated === result.higher ? 0 : result.higherId;
-}
-
-function assignCustomersToCS(customers, availableCS) {
+function assignCustomersToCustomerSuccess(customers, availableCustomerSuccess) {
   for (const customer of customers) {
-    let assignedCS = null;
-    for (const cs of availableCS) {
+    for (const cs of availableCustomerSuccess) {
       if (customer.score <= cs.score) {
-        assignedCS = cs;
+        cs.customers.push(customer.id);
         break;
       }
     }
-    if (assignedCS) {
-      assignedCS.customers.push(customer.id);
+  }
+}
+
+function findHighestCustomerSuccessId(availableCustomerSuccess) {
+  let highest = { higher: 0, duplicated: 0, higherId: 0 };
+
+  for (const cs of availableCustomerSuccess) {
+    const customersLength = cs.customers.length;
+
+    if (customersLength > highest.higher) {
+      highest = { higher: customersLength, duplicated: 0, higherId: cs.id };
+    } else if (customersLength === highest.higher) {
+      highest.duplicated = highest.higher;
     }
   }
+
+  return highest.duplicated === highest.higher ? 0 : highest.higherId;
 }
 
 function customerSuccessBalancing(
@@ -51,14 +67,16 @@ function customerSuccessBalancing(
   customers,
   customerSuccessAway
 ) {
-  const availableCS = getAvailableCustomerIds(
+  handleErrors(customerSuccess, customers, customerSuccessAway);
+
+  const availableCustomerSuccess = filterAndSortCustomerSuccess(
     customerSuccess,
     customerSuccessAway
   );
 
-  assignCustomersToCS(customers, availableCS);
+  assignCustomersToCustomerSuccess(customers, availableCustomerSuccess);
 
-  return findHighestCSId(availableCS);
+  return findHighestCustomerSuccessId(availableCustomerSuccess);
 }
 
 test("Scenario 1", () => {
@@ -160,4 +178,45 @@ test("Scenario 8", () => {
   const customers = mapEntities([90, 70, 20, 40, 60, 10]);
   const csAway = [2, 4];
   expect(customerSuccessBalancing(css, customers, csAway)).toEqual(1);
+});
+
+test("Scenario 9", () => {
+  const css = [
+    { id: 1, score: 60 },
+    { id: 2, score: 20 },
+  ];
+  const customers = [
+    { id: 1, score: 90 },
+    { id: 2, score: 20 },
+  ];
+
+  expect(() => customerSuccessBalancing(css, customers)).toThrow(
+    "Missing arguments for customerSuccessBalancing function."
+  );
+});
+
+test("Scenario 10", () => {
+  const css = [{ id: 1 }, { id: 2 }];
+  const customers = [
+    { id: 1, score: 90 },
+    { id: 2, score: 20 },
+  ];
+  const csAway = [2, 4];
+
+  expect(() => customerSuccessBalancing(css, customers, csAway)).toThrow(
+    "Invalid CustomerSuccess object. Missing id or score property."
+  );
+});
+
+test("Scenario 11", () => {
+  const css = [
+    { id: 1, score: 60 },
+    { id: 2, score: 20 },
+  ];
+  const customers = [{ score: 90 }, { score: 20 }];
+  const csAway = [2, 4];
+
+  expect(() => customerSuccessBalancing(css, customers, csAway)).toThrow(
+    "Invalid Customer object. Missing id or score property."
+  );
 });
