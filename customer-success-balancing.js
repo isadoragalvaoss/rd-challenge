@@ -3,16 +3,19 @@
  * @param {array} customerSuccess
  * @param {array} customers
  * @param {array} customerSuccessAway
- * @param {array} availableCustomerSuccess
  */
 
-function handleErrors(customerSuccess, customers, customerSuccessAway) {
-  if (!(customerSuccess && customers && customerSuccessAway)) {
+function handleErrors(errors) {
+  const { customerSuccess, customers, customerSuccessAway } = errors;
+  const hasErrors = customerSuccess && customers && customerSuccessAway;
+
+  if (!hasErrors) {
     throw new Error("Missing arguments for customerSuccessBalancing function.");
   }
 
   for (const cs of customerSuccess) {
-    if (!(cs.id && cs.score)) {
+    const hasProperties = cs.id && cs.score;
+    if (!hasProperties) {
       throw new Error(
         "Invalid CustomerSuccess object. Missing id or score property."
       );
@@ -20,13 +23,15 @@ function handleErrors(customerSuccess, customers, customerSuccessAway) {
   }
 
   for (const customer of customers) {
-    if (!(customer.id && customer.score)) {
+    const hasProperties = customer.id && customer.score;
+    if (!hasProperties) {
       throw new Error("Invalid Customer object. Missing id or score property.");
     }
   }
 }
 
-function filterAndSortCustomerSuccess(customerSuccess, customerSuccessAway) {
+function getCustomerSuccess(allCustomerSuccess) {
+  const { customerSuccess, customerSuccessAway } = allCustomerSuccess;
   return customerSuccess
     .filter(
       (customerSuccess) => !customerSuccessAway.includes(customerSuccess.id)
@@ -37,20 +42,20 @@ function filterAndSortCustomerSuccess(customerSuccess, customerSuccessAway) {
 
 function assignCustomersToCustomerSuccess(customers, availableCustomerSuccess) {
   let index = { customer: 0, customerSuccess: 0 };
-  customers.sort((a, b) => a.score - b.score);
+  const sortedCustomers = customers.sort((a, b) => a.score - b.score);
 
-  for (const customer of customers) {
-    if (
-      index.customer < customers.length &&
-      index.customerSuccess < availableCustomerSuccess.length
-    ) {
+  for (const customer of sortedCustomers) {
+    const customerIndexWithinBounds = index.customer < sortedCustomers.length;
+    const customerSuccessIndexWithinBounds =
+      index.customerSuccess < availableCustomerSuccess.length;
+
+    if (customerIndexWithinBounds && customerSuccessIndexWithinBounds) {
       const customerSuccess = availableCustomerSuccess[index.customerSuccess];
+
       if (customer.score <= customerSuccess.score) {
         customerSuccess.customers.push(customer.id);
         index.customer++;
-      } else {
-        index.customerSuccess++;
-      }
+      } else index.customerSuccess++;
     }
   }
 }
@@ -80,12 +85,12 @@ function customerSuccessBalancing(
   customers,
   customerSuccessAway
 ) {
-  handleErrors(customerSuccess, customers, customerSuccessAway);
+  handleErrors({ customerSuccess, customers, customerSuccessAway });
 
-  const availableCustomerSuccess = filterAndSortCustomerSuccess(
+  const availableCustomerSuccess = getCustomerSuccess({
     customerSuccess,
-    customerSuccessAway
-  );
+    customerSuccessAway,
+  });
 
   assignCustomersToCustomerSuccess(customers, availableCustomerSuccess);
 
