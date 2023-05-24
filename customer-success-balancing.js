@@ -30,7 +30,7 @@ function handleErrors(errors) {
   }
 }
 
-function getCustomerSuccess(allCustomerSuccess) {
+function getAvailableCustomerSuccess(allCustomerSuccess) {
   const { customerSuccess, customerSuccessAway } = allCustomerSuccess;
   return customerSuccess
     .filter(
@@ -87,7 +87,7 @@ function customerSuccessBalancing(
 ) {
   handleErrors({ customerSuccess, customers, customerSuccessAway });
 
-  const availableCustomerSuccess = getCustomerSuccess({
+  const availableCustomerSuccess = getAvailableCustomerSuccess({
     customerSuccess,
     customerSuccessAway,
   });

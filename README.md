@@ -8,7 +8,7 @@ O projeto possui as seguintes funcionalidades:
 
 - <b>handleErrors(errors)</b>: Esta função valida os dados de entrada e verifica se há argumentos faltantes ou inválidos. Ela lança erros caso ocorram problemas.
 
-- <b>getCustomerSuccess(allCustomerSuccess)</b>:
+- <b>getAvailableCustomerSuccess(allCustomerSuccess)</b>:
   Esta função filtra,ordena por score e mapeia os gerentes de sucesso disponíveis com base na lista de exclusão, gerando um novo array de gerentes de sucesso com suas respectivas propriedades e adicionando a propriedade customers para salvar os seus clientes.
 
 - <b>assignCustomersToCustomerSuccess(customers, availableCustomerSuccess)</b>:
