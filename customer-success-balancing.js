@@ -36,11 +36,20 @@ function filterAndSortCustomerSuccess(customerSuccess, customerSuccessAway) {
 }
 
 function assignCustomersToCustomerSuccess(customers, availableCustomerSuccess) {
+  let index = { customer: 0, customerSuccess: 0 };
+  customers.sort((a, b) => a.score - b.score);
+
   for (const customer of customers) {
-    for (const cs of availableCustomerSuccess) {
-      if (customer.score <= cs.score) {
-        cs.customers.push(customer.id);
-        break;
+    if (
+      index.customer < customers.length &&
+      index.customerSuccess < availableCustomerSuccess.length
+    ) {
+      const customerSuccess = availableCustomerSuccess[index.customerSuccess];
+      if (customer.score <= customerSuccess.score) {
+        customerSuccess.customers.push(customer.id);
+        index.customer++;
+      } else {
+        index.customerSuccess++;
       }
     }
   }
@@ -49,11 +58,15 @@ function assignCustomersToCustomerSuccess(customers, availableCustomerSuccess) {
 function findHighestCustomerSuccessId(availableCustomerSuccess) {
   let highest = { higher: 0, duplicated: 0, higherId: 0 };
 
-  for (const cs of availableCustomerSuccess) {
-    const customersLength = cs.customers.length;
+  for (const customerSuccess of availableCustomerSuccess) {
+    const customersLength = customerSuccess.customers.length;
 
     if (customersLength > highest.higher) {
-      highest = { higher: customersLength, duplicated: 0, higherId: cs.id };
+      highest = {
+        higher: customersLength,
+        duplicated: 0,
+        higherId: customerSuccess.id,
+      };
     } else if (customersLength === highest.higher) {
       highest.duplicated = highest.higher;
     }
