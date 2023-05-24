@@ -7,12 +7,12 @@
  */
 
 function handleErrors(customerSuccess, customers, customerSuccessAway) {
-  if (!customerSuccess || !customers || !customerSuccessAway) {
+  if (!(customerSuccess && customers && customerSuccessAway)) {
     throw new Error("Missing arguments for customerSuccessBalancing function.");
   }
 
   for (const cs of customerSuccess) {
-    if (!cs.id || !cs.score) {
+    if (!(cs.id && cs.score)) {
       throw new Error(
         "Invalid CustomerSuccess object. Missing id or score property."
       );
@@ -20,7 +20,7 @@ function handleErrors(customerSuccess, customers, customerSuccessAway) {
   }
 
   for (const customer of customers) {
-    if (!customer.id || !customer.score) {
+    if (!(customer.id && customer.score)) {
       throw new Error("Invalid Customer object. Missing id or score property.");
     }
   }
