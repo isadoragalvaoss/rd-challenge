@@ -13,71 +13,65 @@ function handleErrors(errors) {
     throw new Error("Missing arguments for customerSuccessBalancing function.");
   }
 
-  for (const cs of customerSuccess) {
-    const hasProperties = cs.id && cs.score;
+  customerSuccess.forEach((css) => {
+    const hasProperties = css.id && css.score;
     if (!hasProperties) {
       throw new Error(
         "Invalid CustomerSuccess object. Missing id or score property."
       );
     }
-  }
+  });
 
-  for (const customer of customers) {
+  customers.forEach((customer) => {
     const hasProperties = customer.id && customer.score;
     if (!hasProperties) {
       throw new Error("Invalid Customer object. Missing id or score property.");
     }
-  }
+  });
 }
 
 function getAvailableCustomerSuccess(allCustomerSuccess) {
   const { customerSuccess, customerSuccessAway } = allCustomerSuccess;
   return customerSuccess
-    .filter(
-      (customerSuccess) => !customerSuccessAway.includes(customerSuccess.id)
-    )
+    .filter((css) => !customerSuccessAway.includes(css.id))
     .map(({ id, score }) => ({ id, score, customers: [] }))
     .sort((a, b) => a.score - b.score);
 }
 
 function assignCustomersToCustomerSuccess(customers, availableCustomerSuccess) {
-  let index = { customer: 0, customerSuccess: 0 };
+  let customerSuccessIndex = 0;
   const sortedCustomers = customers.sort((a, b) => a.score - b.score);
 
-  for (const customer of sortedCustomers) {
-    const customerIndexWithinBounds = index.customer < sortedCustomers.length;
+  sortedCustomers.forEach((customer) => {
     const customerSuccessIndexWithinBounds =
-      index.customerSuccess < availableCustomerSuccess.length;
+      customerSuccessIndex < availableCustomerSuccess.length;
 
-    if (customerIndexWithinBounds && customerSuccessIndexWithinBounds) {
-      const customerSuccess = availableCustomerSuccess[index.customerSuccess];
+    if (customerSuccessIndexWithinBounds) {
+      const customerSuccess = availableCustomerSuccess[customerSuccessIndex];
 
       if (customer.score <= customerSuccess.score) {
         customerSuccess.customers.push(customer.id);
-        index.customer++;
-      } else index.customerSuccess++;
+      } else customerSuccessIndex++;
     }
-  }
+  });
 }
 
 function findHighestCustomerSuccessId(availableCustomerSuccess) {
-  let highest = { higher: 0, duplicated: 0, higherId: 0 };
+  let maxCustomers = 0;
+  let maxCustomerSuccessId = 0;
 
-  for (const customerSuccess of availableCustomerSuccess) {
+  availableCustomerSuccess.forEach((customerSuccess) => {
     const customersLength = customerSuccess.customers.length;
 
-    if (customersLength > highest.higher) {
-      highest = {
-        higher: customersLength,
-        duplicated: 0,
-        higherId: customerSuccess.id,
-      };
-    } else if (customersLength === highest.higher) {
-      highest.duplicated = highest.higher;
+    if (customersLength > maxCustomers) {
+      maxCustomers = customersLength;
+      maxCustomerSuccessId = customerSuccess.id;
+    } else if (customersLength === maxCustomers) {
+      maxCustomers = 0;
     }
-  }
+  });
 
-  return highest.duplicated === highest.higher ? 0 : highest.higherId;
+  return maxCustomers === 0 ? 0 : maxCustomerSuccessId;
 }
 
 function customerSuccessBalancing(
